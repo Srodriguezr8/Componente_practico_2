@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+  <div class="form-container">
+
+    <h2 class="title">{{ title2 }}</h2>
+
+    {% for message in messages %}
+      <div class="form-errors">{{ message }}</div>
+    {% endfor %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+        {% for field in form %}
+          <div class="form-group">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+
+            {% if field.name == 'categories' %}
+              <small>Si no ves categorías, <a href="{% url 'commerce:category_create' %}">crear una categoría</a>.</small>
+            {% endif %}
+
+            {% if field.errors %}
+              <p style="color:red">{{ field.errors }}</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+
+      <div class="form-group">
+        <input type="submit" value="Guardar" class="btn blue">
+        <a href="{% url 'commerce:product_list' %}" class="btn red">Cancelar</a>
+      </div>
+    </form>
+
+  </div>
+</div>
+{% endblock content %}
+    

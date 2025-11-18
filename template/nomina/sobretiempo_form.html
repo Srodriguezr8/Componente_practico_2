@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Nuevo Registro de Sobretiempo</h2>
+
+    <form method="post" id="frmSobretiempo" novalidate>
+        {% csrf_token %}
+        <div id="formErrors" class="mb-3"></div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Datos del Empleado</h5>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Empleado</label>
+                        {{ form.empleado }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Fecha</label>
+                        <input type="text" class="form-control" value="{{ today|date:'d/m/Y' }}" readonly>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Total Horas / Mes</label>
+                        {{ form.total_horas }}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label">Sueldo Mensual</label>
+                        {{ form.sueldo_mensual }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Detalle de Horas</h5>
+            </div>
+
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Tipo</label>
+                        <select id="tipo" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for t in tipos %}
+                                <option value="{{ t.id }}" data-factor="{{ t.factor }}">
+                                    {{ t.descripcion }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label">Horas</label>
+                        <input type="number" id="horas" min="1" class="form-control">
+                    </div>
+
+                    <div class="col-md-2 text-end">
+                        <button type="button" id="btnAdd" class="btn btn-success w-100">➕ Agregar</button>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tipo</th>
+                                <th>Factor</th>
+                                <th>Horas</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detalle"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-end mt-3 pt-3 border-top">
+            <button type="submit" id="btnSubmit" class="btn btn-success fw-semibold me-2">
+                💾 Guardar Sobretiempo
+            </button>
+            <a href="{{ list_url }}" class="btn btn-danger fw-semibold">Cancelar</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    var list_url = "{{ list_url }}";
+    var save_url = "{{ save_url }}";
+</script>
+<script src="{% static 'js/nomina/sobretiempo.js' %}"></script>
+
+{% endblock %}

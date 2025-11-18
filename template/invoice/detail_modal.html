@@ -1,0 +1,113 @@
+<div class="modal-header bg-success text-white">
+  <h5 class="modal-title">
+    🧾 Factura N° {{ invoice.id }} — {{ invoice.customer.get_full_name }}
+  </h5>
+  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+
+<div class="modal-body">
+  <!-- CABECERA -->
+  <div class="row mb-4 border-bottom pb-2">
+    <div class="col-md-6">
+      <p><strong>Cliente:</strong> {{ invoice.customer.get_full_name }}</p>
+      <p><strong>CI/RUC:</strong> {{ invoice.customer.dni }}</p>
+      <p><strong>Dirección:</strong> {{ invoice.customer.address }}</p>
+    </div>
+    <div class="col-md-6 text-end">
+      <p><strong>Fecha:</strong> {{ invoice.issue_date|date:"d/m/Y H:i" }}</p>
+      <p><strong>Método de Pago:</strong> {{ invoice.get_payment_method_display }}</p>
+      <p><strong>Estado:</strong>
+        {% if invoice.state %}
+          <span class="badge bg-success">Activo</span>
+        {% else %}
+          <span class="badge bg-danger">Anulado</span>
+        {% endif %}
+      </p>
+    </div>
+  </div>
+
+  <!-- DETALLE PRODUCTOS -->
+  <div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle">
+      <thead class="table-light">
+        <tr class="text-center">
+          <th>Código</th>
+          <th>Descripción</th>
+          <th>Cantidad</th>
+          <th>Precio</th>
+          <th>IVA</th>
+          <th>Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for det in details %}
+        <tr>
+          <td class="text-center">{{ det.product.id }}</td>
+          <td>{{ det.product.description }}</td>
+          <td class="text-center">{{ det.quantity|floatformat:2 }}</td>
+          <td class="text-end">${{ det.price|floatformat:2 }}</td>
+          <td class="text-end">${{ det.iva|floatformat:2 }}</td>
+          <td class="text-end fw-semibold">${{ det.subtotal|floatformat:2 }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="text-center text-muted py-3">No hay productos registrados.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- TOTALES -->
+  <div class="row mt-4 justify-content-end">
+    <div class="col-md-4">
+      <table class="table table-borderless text-end">
+        <tr><th>Subtotal:</th><td>${{ invoice.subtotal|floatformat:2 }}</td></tr>
+        <tr><th>IVA:</th><td>${{ invoice.iva|floatformat:2 }}</td></tr>
+        <tr class="table-success fw-bold fs-5 border-top">
+          <th>Total:</th><td>${{ invoice.total|floatformat:2 }}</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- BOTONES -->
+<div class="modal-footer d-flex justify-content-between flex-wrap gap-2">
+  <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+
+  <a href="{% url 'commerce:invoice_print' invoice.id %}"
+     class="btn btn-success text-white fw-bold px-4 shadow-sm"
+     style="background-color: #3728dd; border-color: #3728dd;"
+     target="_blank" rel="noopener noreferrer">
+    🖨️ Imprimir
+  </a>
+
+  <a href="{% url 'commerce:invoice_update' invoice.id %}"
+     class="btn btn-warning text-dark fw-bold px-4 shadow-sm", 
+     style="background-color: #cd7343; border-color: #cd7343;">
+    ✏️ Editar
+  </a>
+
+  <button class="btn btn-danger text-white fw-bold px-4 shadow-sm"
+          style="background-color: #d64040; border-color: #d64040;"
+          data-action="delete" data-id="{{ invoice.id }}">
+    🗑️ Eliminar
+  </button>
+
+  {% if invoice.state %}
+  <button class="btn btn-secondary text-white fw-bold px-4 shadow-sm"
+          style="background-color: #6f42c1; border-color: #6f42c1;"
+          data-action="annul" data-id="{{ invoice.id }}">
+    🚫 Anular
+  </button>
+  {% endif %}
+
+  <button type="button"
+          class="btn btn-info text-white fw-bold px-4 shadow-sm"
+          style="background-color: #31c0b6; border-color: #31c0b6;"
+          data-bs-dismiss="modal">
+    ✖ Cerrar
+  </button>
+</div>
+<!-- El manejo de eliminar/anular se realiza desde el script global en invoice/list.html -->

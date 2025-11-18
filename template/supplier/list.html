@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="table-container">
+    <br>
+    <h1 class="title">{{ title2 | upper }}</h1>
+     <form method="get" >
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar por nombre o RUC">
+        <button type="submit">Buscar</button>
+    </form>
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Dni</th>
+          <th>Direccion</th>
+          <th>Telefono</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+      </tr>
+      </thead>
+      <tbody>
+       {% for item in suppliers %}
+        <tr>
+         <td>{{item.name}}</td>
+          <td>{{item.ruc}}</td>
+          <td>{{item.address}}</td>
+          <td>{{item.phone}}</td>
+          <td>{% if item.state %}
+               ✔
+              {% else %}
+               ➖
+              {% endif %}
+          </td>
+          <td>
+            <a href={% url 'core:supplier_detail' item.id %}>🔎</a>
+            <a href={% url 'core:supplier_update' item.id %}>✏️</a>
+            <a href={% url 'core:supplier_delete' item.id %}>❌</a>
+          </td>
+        </tr>
+       {% endfor %}
+      </tbody>
+    </table>
+     <div class="form-group">
+       <a class="btn blue" href={% url 'core:supplier_create' %}>Nuevo Proveedor</a>
+     </div>
+  </div>
+{% endblock content  %}

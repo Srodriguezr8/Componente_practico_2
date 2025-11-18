@@ -1,0 +1,113 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Factura #{{ invoice.id }}</title>
+    <style>
+        /* Simple, printer-friendly invoice styles */
+        body { font-family: Arial, Helvetica, sans-serif; color: #222; margin: 20px; }
+        .invoice-box { max-width: 900px; margin: auto; padding: 20px; border: 1px solid #eee; }
+        header { display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; }
+        .company { text-align: right; }
+        h1 { margin: 0; font-size: 20px; }
+        .meta { margin-top: 8px; color: #555; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background: #f8f8f8; text-align: left; }
+        .text-right { text-align: right; }
+        .totals td { border: none; }
+        .totals tr td:first-child { text-align: right; padding-right: 20px; }
+        .small { font-size: 12px; color: #666; }
+        @media print {
+            .no-print { display: none; }
+            body { margin: 0; }
+            .invoice-box { border: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="invoice-box">
+    <header>
+        <div class="logo">
+            <!-- Replace with your logo if available -->
+            <img src="{% static 'css/../img/logo.png' %}" alt="Logo" style="height:48px; object-fit:contain;" onerror="this.style.display='none'">
+        </div>
+        <div class="company">
+            <h1>Super Mercado Económico</h1>
+            <div class="small">Dirección: Av. Principal 123 - Ciudad</div>
+            <div class="small">Tel: (000) 000-0000 · RUC: 9999999999</div>
+        </div>
+    </header>
+
+    <section>
+        <h2>Factura N° {{ invoice.id }}</h2>
+        <div class="meta small">
+            <div><strong>Cliente:</strong> {{ invoice.customer.get_full_name }}</div>
+            <div><strong>Cédula / RUC:</strong> {{ invoice.customer.dni }}</div>
+            <div><strong>Fecha:</strong> {{ invoice.issue_date|date:"d/m/Y H:i" }}</div>
+            <div><strong>Método de Pago:</strong> {{ invoice.get_payment_method_display }}</div>
+        </div>
+    </section>
+
+    <table aria-label="Detalle de factura">
+        <thead>
+            <tr>
+                <th style="width:10%">Código</th>
+                <th>Descripción</th>
+                <th style="width:12%" class="text-right">Cantidad</th>
+                <th style="width:15%" class="text-right">Precio</th>
+                <th style="width:12%" class="text-right">IVA</th>
+                <th style="width:15%" class="text-right">Subtotal</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for det in details %}
+            <tr>
+                <td class="text-right">{{ det.product.id }}</td>
+                <td>{{ det.product.description }}</td>
+                <td class="text-right">{{ det.quantity|floatformat:2 }}</td>
+                <td class="text-right">${{ det.price|floatformat:2 }}</td>
+                <td class="text-right">${{ det.iva|floatformat:2 }}</td>
+                <td class="text-right">${{ det.subtotal|floatformat:2 }}</td>
+            </tr>
+        {% empty %}
+            <tr>
+                <td colspan="6" class="small text-center">No hay productos registrados.</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <table class="totals" style="width:100%; margin-top:16px;">
+        <tr>
+            <td style="width:70%"></td>
+            <td style="width:30%">
+                <table style="width:100%">
+                    <tr>
+                        <td>Subtotal:</td>
+                        <td class="text-right">${{ invoice.subtotal|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td>IVA:</td>
+                        <td class="text-right">${{ invoice.iva|floatformat:2 }}</td>
+                    </tr>
+                    <tr style="font-weight:bold; border-top:1px solid #ddd;">
+                        <td>Total:</td>
+                        <td class="text-right">${{ invoice.total|floatformat:2 }}</td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+
+    <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
+        <div class="small">Generado por: {{ invoice.user.get_full_name|default:invoice.user.username }}</div>
+        <div>
+            <button class="no-print" onclick="window.print()">🖨️ Imprimir / Guardar como PDF</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

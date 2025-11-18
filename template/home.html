@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+   <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+         <h1 class="h3 mb-0">{{ title2|default:'Dashboard' }}</h1>
+         <p class="text-muted">Resumen rápido del sistema</p>
+      </div>
+      <div>
+         <a class="btn btn-primary" href="{% url 'commerce:invoice_list' %}" style="background-color: #43cd7d; border-color: #43cd7d;">Ir a Ventas</a>
+         <a class="btn btn-outline-secondary" href="{% url 'commerce:product_list' %} " style="background-color: #43b8cd; border-color: #43b8cd;">Productos</a>
+      </div>
+   </div>
+
+   <div class="row g-3">
+      <div class="col-md-4">
+         <div class="card p-3 shadow-sm">
+            <h6 class="mb-1">Proveedores</h6>
+            <h2 class="mb-0">{{ suppliers }}</h2>
+         </div>
+      </div>
+      <div class="col-md-4">
+         <div class="card p-3 shadow-sm">
+            <h6 class="mb-1">Clientes</h6>
+            <h2 class="mb-0">{{ customers }}</h2>
+         </div>
+      </div>
+      <div class="col-md-4">
+         <div class="card p-3 shadow-sm">
+            <h6 class="mb-1">Productos</h6>
+            <h2 class="mb-0">{{ products }}</h2>
+         </div>
+      </div>
+   </div>
+
+   <div class="row g-3 mt-3">
+      <div class="col-md-4">
+         <div class="card p-3 shadow-sm">
+            <h6 class="mb-1">Marcas</h6>
+            <h2 class="mb-0">{{ brands }}</h2>
+         </div>
+      </div>
+      <div class="col-md-4">
+         <div class="card p-3 shadow-sm">
+            <h6 class="mb-1">Ventas (Facturas)</h6>
+            <h2 class="mb-0">{{ invoices }}</h2>
+         </div>
+      </div>
+      <div class="col-md-4">
+         <div class="card p-3 shadow-sm">
+            <h6 class="mb-1">Compras</h6>
+            <h2 class="mb-0">{{ purchases }}</h2>
+         </div>
+      </div>
+   </div>
+
+   <div class="mt-4">
+      <p class="text-muted">Consejos rápidos: usa el botón "Ir a Ventas" para crear nuevas facturas. Puedes imprimirlas o descargarlas en formato PDF desde el detalle.</p>
+   </div>
+
+{% endblock content %}

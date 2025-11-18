@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="table-container">
+    <br>
+    <h1 class="title">{{ title2|upper }}</h1>
+
+    <form method="get" class="mb-3">
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar por proveedor, documento o fecha">
+        <button type="submit">Buscar</button>
+        <a class="btn btn-success" href="{% url 'commerce:purchase_create' %}">➕ Nueva Compra</a>
+    </form>
+
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Proveedor</th>
+                <th>Documento</th>
+                <th>Fecha</th>
+                <th>Subtotal</th>
+                <th>IVA</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in purchases %}
+            <tr>
+                <td>{{ item.supplier }}</td>
+                <td>{{ item.num_document }}</td>
+                <td>{{ item.issue_date|date:"d/m/Y H:i" }}</td>
+                <td>${{ item.subtotal|floatformat:2 }}</td>
+                <td>${{ item.iva|floatformat:2 }}</td>
+                <td><strong>${{ item.total|floatformat:2 }}</strong></td>
+
+                <td class="text-center">
+                    <button type="button" class="btn btn-sm btn-outline-primary view-detail" data-id="{{ item.id }}">🔎 Ver</button>
+                    <a class="btn btn-sm btn-outline-warning" href="{% url 'commerce:purchase_update' item.id %}" title="Editar">✏️</a>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-action="delete" data-id="{{ item.id }}">🗑️</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align:center;">No hay compras registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="form-group mt-3">
+        <a class="btn blue" href="{% url 'commerce:purchase_create' %}">➕ Nueva Compra</a>
+    </div>
+</div>
+
+<!-- Modal para detalle cargado por AJAX -->
+<div class="modal fade" id="purchaseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    function getCookie(name) {
+        const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return match ? match.pop() : '';
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    const modalEl = document.getElementById('purchaseModal');
+    const modal = new bootstrap.Modal(modalEl);
+    const modalContent = document.getElementById('modalContent');
+
+    const detailBase = "{% url 'commerce:purchase_detail' 0 %}".replace('0/', '');
+    const deleteBase = "{% url 'commerce:purchase_delete' 0 %}".replace('0/', '');
+
+    document.querySelectorAll('.view-detail').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            if (!id) return alert('ID de compra no disponible.');
+            try {
+                const res = await fetch(`${detailBase}${id}/`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                if (!res.ok) throw new Error('Error al cargar detalle');
+                const data = await res.json();
+                modalContent.innerHTML = data.html || '<div class="p-4">No hay contenido.</div>';
+                modal.show();
+            } catch (err) {
+                console.error(err);
+                alert('No se pudo cargar el detalle de la compra.');
+            }
+        });
+    });
+
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        if (!id) return alert('ID no disponible.');
+        if (action === 'delete') {
+            if (!confirm(`¿Seguro que desea eliminar la compra N° ${id}?`)) return;
+            try {
+                const resp = await fetch(`${deleteBase}${id}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': csrftoken, 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const json = await (resp.json().catch(() => ({})));
+                if (resp.ok) { alert(json.msg || 'Compra eliminada'); location.reload(); }
+                else { alert(json.msg || `Error: estado ${resp.status}`); }
+            } catch (err) { console.error(err); alert('Error al procesar la solicitud.'); }
+        }
+    });
+
+});
+</script>
+
+{% endblock %}

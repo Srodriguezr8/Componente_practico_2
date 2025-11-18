@@ -1,0 +1,20 @@
+Django==5.2.7
+xhtml2pdf==0.2.8
+reportlab==3.5.68
+Pillow
+html5lib
+svglib
+pyPDF3
+python-bidi
+arabic-reshaper
+pyhanko
+pyhanko-certvalidator
+# PostgreSQL driver
+psycopg2-binary
+# SQL Server driver for Django
+mssql-django
+# Notes:
+# - xhtml2pdf has native dependencies (reportlab). On Windows you may need to pin a reportlab
+#   version compatible with xhtml2pdf (3.5.68 reported to work in some setups).
+# - If PDF generation fails on the server, the app will fallback to returning an HTML
+#   printable page (the template already provides a good printable layout).

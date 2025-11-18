@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="modal-header">
+    <h5 class="modal-title">Detalle de Compra #{{ purchase.id }}</h5>
+</div>
+<div class="modal-body">
+    <p><strong>Proveedor:</strong> {{ purchase.supplier }}</p>
+    <p><strong>Documento:</strong> {{ purchase.num_document }}</p>
+    <p><strong>Fecha:</strong> {{ purchase.issue_date|date:"d/m/Y H:i" }}</p>
+    <p><strong>Subtotal:</strong> {{ purchase.subtotal }}</p>
+    <p><strong>IVA:</strong> {{ purchase.iva }}</p>
+    <p><strong>Total:</strong> {{ purchase.total }}</p>
+
+    <h6>Detalles</h6>
+    {% if details and details.exists %}
+    <table class="table table-sm">
+        <thead><tr><th>Producto</th><th>Cantidad</th><th>Costo</th><th>Subtotal</th></tr></thead>
+        <tbody>
+            {% for d in details %}
+            <tr>
+                <td>{{ d.product }}</td>
+                <td>{{ d.quantify }}</td>
+                <td>{{ d.cost }}</td>
+                <td>{{ d.subtotal }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No hay detalles asociados a esta compra.</p>
+    {% endif %}
+</div>
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+</div>
+{% endblock %}

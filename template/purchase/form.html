@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+<div class="container mt-4">
+    <h2 class="mb-4">{{ title2|default:"Nueva Compra" }}</h2>
+
+    <form method="post" novalidate id="frmPurchase">
+        {% csrf_token %}
+        <div id="formErrors" class="mb-3"></div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Datos de la Compra</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6 col-lg-6">
+                        <label class="form-label fw-semibold">Proveedor</label>
+                        {{ form.supplier }}
+                    </div>
+                    <div class="col-md-6 col-lg-6">
+                        <label class="form-label fw-semibold">Documento</label>
+                        {{ form.num_document }}
+                    </div>
+                </div>
+
+                <div class="row g-3 align-items-center mt-2">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="p-3 border rounded bg-light shadow-sm text-center">
+                            <label class="form-label text-muted mb-1">Subtotal</label>
+                            <div class="h4 fw-bold text-dark mb-0">{{ form.subtotal }}</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="p-3 border rounded bg-light shadow-sm text-center">
+                            <label class="form-label text-muted mb-1">IVA</label>
+                            <div class="h4 fw-bold text-dark mb-0">{{ form.iva }}</div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-12">
+                        <div class="p-3 border rounded bg-success text-white shadow text-center">
+                            <label class="form-label text-uppercase fw-bold mb-1">Total</label>
+                            <div class="h3 fw-bold mb-0">{{ form.total }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Detalle de Productos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label">Producto</label>
+                        <select id="product" class="form-select">
+                            <option value="">-- Seleccione un producto --</option>
+                            {% for p in products %}
+                                <option value="{{ p.id }}" data-description="{{ p.description }}" data-price="{{ p.price }}" data-iva="{{ p.iva }}" data-stock="{{ p.stock }}" data-cost="{{ p.cost }}">{{ p.description }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Costo</label>
+                        <input type="text" id="price" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">IVA</label>
+                        <input type="text" id="iva" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Cantidad</label>
+                        <input type="number" id="quantify" class="form-control" min="1" value="1">
+                    </div>
+                    <div class="col-md-2 text-end">
+                        <button type="button" id="btnAdd" class="btn btn-success w-100">➕ Agregar</button>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <table class="table table-bordered table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 15%;">Codigo</th>
+                                <th style="width: 35%;">Descripción</th>
+                                <th style="width: 15%;">Costo</th>
+                                <th style="width: 10%;">Cantidad</th>
+                                <th style="width: 10%;">IVA</th>
+                                <th style="width: 15%;">Subtotal</th>
+                                <th style="width: 10%;">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detalle"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-end mt-3 pt-3 border-top">
+            <button type="submit" id="btnSubmit" class="btn btn-success fw-semibold me-2">
+                <span id="btnText">💾 Guardar Compra</span>
+                <span id="btnSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status" aria-hidden="true"></span>
+            </button>
+            <a href="{% url 'commerce:purchase_list' %}" class="btn btn-danger fw-semibold">Cancelar</a>
+        </div>
+    </form>
+    </div>
+
+    <script>
+        var save_url = "{{ save_url }}";
+        var purchase_list_url = "{{ purchase_list_url }}";
+        var detail_sales = JSON.parse("{{ detail_sales|default:'[]'|escapejs }}");
+    </script>
+    <script src="{% static 'js/purchases/purchases.js' %}"></script>
+{% endblock %}

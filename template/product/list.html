@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="table-container">
+    <br>
+    <h1 class="title">{{ title2 | upper }}</h1>
+
+    <form method="get">
+      <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar por descripción o marca">
+      <button type="submit">Buscar</button>
+    </form>
+
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th>Costo</th>
+          <th>Precio</th>
+          <th>Stock</th>
+          <th>IVA</th>
+          <th>Fecha Caducidad</th>
+          <th>Marca</th>
+          <th>Proveedor</th>
+          <th>Categorías</th>
+          <th>Línea</th>
+          <th>Imagen</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in products %}
+          <tr>
+            <td>{{ item.description }}</td>
+            <td>${{ item.cost }}</td>
+            <td>${{ item.price }}</td>
+            <td>{{ item.stock }}</td>
+            <td>{{ item.get_iva_display }}</td>
+            <td>{{ item.expiration_date|date:"Y-m-d" }}</td>
+            <td>{{ item.brand.description }}</td>
+            <td>{{ item.supplier.name }}</td>
+            <td>{{ item.get_categories }}</td>
+            <td>{{ item.get_line_display }}</td>
+            <td>
+              {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.description }}" width="50" height="50">
+              {% else %}
+                <img src="/media/products/default.png" alt="Sin imagen" width="50" height="50">
+              {% endif %}
+            </td>
+            <td>
+              {% if item.state %}
+                ✔
+              {% else %}
+                ➖
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'commerce:product_update' item.id %}">✏️</a>
+              <a href="{% url 'commerce:product_delete' item.id %}">❌</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="13">No hay productos registrados.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="form-group">
+      <a class="btn blue" href="{% url 'commerce:product_create' %}">Nuevo Producto</a>
+    </div>
+  </div>
+{% endblock content %}

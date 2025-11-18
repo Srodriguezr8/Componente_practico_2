@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="table-container">
+    <br>
+    <h1 class="title">LISTA DE SOBRESUELDOS</h1>
+
+    <form method="get" class="mb-3">
+        <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar por empleado o fecha">
+        <button type="submit">Buscar</button>
+        <a class="btn btn-success" href="{% url 'nomina:sobretiempo_create' %}">➕ Nuevo Sobretiempo</a>
+    </form>
+
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Empleado</th>
+                <th>Fecha</th>
+                <th>Total Horas</th>
+                <th>Sueldo Mensual</th>
+                <th>Total Calculado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for item in sobretiempos %}
+            <tr>
+                <td>{{ item.empleado }}</td>
+                <td>{{ item.fecha_registro|date:"d/m/Y" }}</td>
+                <td>{{ item.total_horas_con_extra }}</td>
+                <td>${{ item.sueldo_mensual|floatformat:2 }}</td>
+                <td><strong>${{ item.total_calculado|floatformat:2 }}</strong></td>
+
+                <td class="text-center">
+                    <button type="button"
+                        class="btn btn-sm btn-outline-primary view-detail"
+                        data-id="{{ item.id }}">🔎 Ver</button>
+
+                    <button type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        data-action="delete"
+                        data-id="{{ item.id }}">🗑️</button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" class="text-center">No hay registros.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="form-group mt-3">
+        <a class="btn blue" href="{% url 'nomina:sobretiempo_create' %}">➕ Nuevo Sobretiempo</a>
+    </div>
+</div>
+
+<!-- Modal AJAX -->
+<div class="modal fade" id="sobretiempoModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content" id="modalContent"></div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    function getCookie(name) {
+        const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+        return match ? match.pop() : '';
+    }
+    const csrftoken = getCookie('csrftoken');
+
+    const modal = new bootstrap.Modal(document.getElementById('sobretiempoModal'));
+    const modalContent = document.getElementById('modalContent');
+
+    // Construimos base de detalle de forma robusta
+    let detailBase = "{% url 'nomina:sobretiempo_detail' 0 %}";
+    // Ej: "/nomina/sobretiempos/detalle/0/" -> eliminar "0/"
+    detailBase = detailBase.replace(/0\/?$/, '');
+
+    let deleteBase = "{% url 'nomina:sobretiempo_delete' 0 %}";
+    deleteBase = deleteBase.replace(/0\/?$/, '');
+
+    document.querySelectorAll('.view-detail').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const id = btn.dataset.id;
+            if (!id) return alert('ID no disponible.');
+            // Ensurar URL final correcta (evitar //)
+            const url = detailBase.endsWith('/') ? `${detailBase}${id}/` : `${detailBase}/${id}/`;
+            try {
+                const res = await fetch(url, {
+                    method: 'GET',
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+
+                if (!res.ok) {
+                    const txt = await res.text().catch(()=>null);
+                    console.error('Error al obtener detalle:', res.status, txt);
+                    return alert('Error al cargar el detalle (ver consola).');
+                }
+
+                const data = await res.json().catch(async () => {
+                    const txt = await res.text().catch(()=>null);
+                    console.error('Respuesta no JSON:', txt);
+                    throw new Error('Respuesta inesperada del servidor');
+                });
+
+                modalContent.innerHTML = data.html || '<div class="p-4">No hay contenido.</div>';
+                modal.show();
+            } catch (err) {
+                console.error(err);
+                alert('No se pudo cargar el detalle.');
+            }
+        });
+    });
+
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+
+        if (btn.dataset.action === 'delete') {
+            const id = btn.dataset.id;
+            if (!confirm(`¿Seguro que desea eliminar el registro N° ${id}?`)) return;
+
+            const url = deleteBase.endsWith('/') ? `${deleteBase}${id}/` : `${deleteBase}/${id}/`;
+            try {
+                const res = await fetch(url, {
+                    method: "POST",
+                    headers: {"X-CSRFToken": csrftoken, "X-Requested-With": "XMLHttpRequest"}
+                });
+                const data = await res.json().catch(()=>({msg: 'Respuesta inválida'}));
+                alert(data.msg || 'Operación finalizada');
+                location.reload();
+            } catch (err) {
+                console.error(err);
+                alert('Error al eliminar (ver consola).');
+            }
+        }
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="table-container">
+    <br>
+    <h1 class="title">{{ title2 | upper }}</h1>
+
+    <form method="get">
+      <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar marca...">
+      <button type="submit">Buscar</button>
+    </form>
+
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in brands %}
+          <tr>
+            <td>{{ item.description }}</td>
+            <td>
+              <a href="{% url 'commerce:brand_update' item.id %}">✏️</a>
+              <a href="{% url 'commerce:brand_delete' item.id %}">❌</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="2">No hay marcas registradas.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div class="form-group">
+      <a class="btn blue" href="{% url 'commerce:brand_create' %}">Nueva Marca</a>
+    </div>
+  </div>
+{% endblock content %}

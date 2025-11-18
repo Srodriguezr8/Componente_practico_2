@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="table-container">
+  <br>
+  <h1 class="title">{{ title2|upper }}</h1>
+
+  <form method="get" class="mb-3">
+    <input type="text" name="q" value="{{ request.GET.q }}" placeholder="Buscar por cliente, fecha o método de pago">
+    <button type="submit">Buscar</button>
+  </form>
+
+  <table class="styled-table">
+    <thead>
+      <tr>
+        <th>Cliente</th>
+        <th>Método de Pago</th>
+        <th>Fecha Emisión</th>
+        <th>Subtotal</th>
+        <th>IVA</th>
+        <th>Total</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for item in invoices %}
+      <tr>
+        <td>{{ item.customer.get_full_name }}</td>
+        <td>{{ item.get_payment_method_display }}</td>
+        <td>{{ item.issue_date|date:"d/m/Y H:i" }}</td>
+        <td>${{ item.subtotal|floatformat:2 }}</td>
+        <td>${{ item.iva|floatformat:2 }}</td>
+        <td><strong>${{ item.total|floatformat:2 }}</strong></td>
+
+        <td class="text-center">
+          {% if item.state %}
+            <span class="badge bg-success">Activo</span>
+          {% else %}
+            <span class="badge bg-danger">Anulado</span>
+          {% endif %}
+        </td>
+
+        <td class="text-center">
+          <!-- abrir modal con detalle (carga ajax) -->
+          <button 
+            type="button" 
+            class="btn btn-sm btn-outline-primary view-detail" 
+            data-id="{{ item.id }}">
+            🔎 Ver
+          </button>
+
+          <a class="btn btn-sm btn-outline-warning" href="{% url 'commerce:invoice_update' item.id %}" title="Editar">✏️</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr>
+        <td colspan="8" style="text-align:center;">No hay facturas registradas.</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="form-group mt-3">
+    <a class="btn blue" href="{% url 'commerce:invoice_create' %}">➕ Nueva Factura</a>
+  </div>
+</div>
+
+<!-- ===================== MODAL (contenido cargado por AJAX) ===================== -->
+<div class="modal fade" id="invoiceModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content" id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Helper CSRF por cookie
+  function getCookie(name) {
+    const match = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return match ? match.pop() : '';
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // referencias modal
+  const modalEl = document.getElementById('invoiceModal');
+  const modal = new bootstrap.Modal(modalEl);
+  const modalContent = document.getElementById('modalContent');
+
+  // construir URLs base limpias (se usan .replace para quitar el "0/" del template)
+  const detailBase = "{% url 'commerce:invoice_detail' 0 %}".replace('0/', '');
+  const deleteBase = "{% url 'commerce:invoice_delete' 0 %}".replace('0/', '');
+  const annulBase  = "{% url 'commerce:invoice_annul' 0 %}".replace('0/', '');
+
+  // Abrir modal y cargar detalle (AJAX)
+  document.querySelectorAll('.view-detail').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      if (!id) return alert('ID de factura no disponible.');
+
+      try {
+        const res = await fetch(`${detailBase}${id}/`, {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        if (!res.ok) throw new Error('Error al cargar detalle');
+        const data = await res.json();
+        modalContent.innerHTML = data.html || '<div class="p-4">No hay contenido.</div>';
+        modal.show();
+      } catch (err) {
+        console.error(err);
+        alert('No se pudo cargar el detalle de la factura.');
+      }
+    });
+  });
+
+  // Delegación: manejar botones dentro del modal (data-action="delete" / "annul")
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+
+    const action = btn.dataset.action; // 'delete' o 'annul'
+    const id = btn.dataset.id;
+    if (!id) return alert('ID no disponible.');
+
+    let url;
+    let label;
+    if (action === 'delete') { url = deleteBase; label = 'eliminar'; }
+    else if (action === 'annul') { url = annulBase; label = 'anular'; }
+    else return;
+
+    if (!confirm(`¿Seguro que desea ${label} la factura N° ${id}?`)) return;
+
+    try {
+      const resp = await fetch(`${url}${id}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+      const json = await (resp.json().catch(() => ({})));
+      if (resp.ok) {
+        alert(json.msg || 'Acción realizada correctamente.');
+        modal.hide();
+        location.reload();
+      } else {
+        alert(json.msg || `Error: estado ${resp.status}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error al procesar la solicitud.');
+    }
+  });
+
+});
+</script>
+
+{% endblock content %}

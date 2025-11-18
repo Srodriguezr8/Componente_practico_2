@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="modal-header">
+    <h5 class="modal-title">Detalle de Sobretiempo #{{ sobretiempo.id }}</h5>
+</div>
+
+<div class="modal-body">
+
+    <p><strong>Empleado:</strong> {{ sobretiempo.empleado }}</p>
+
+    <!-- DateField: sin especificadores de hora -->
+    <p><strong>Fecha:</strong> {{ sobretiempo.fecha_registro|date:"d/m/Y" }}</p>
+
+    <p><strong>Total Horas:</strong> {{ total_horas_con_extra }}</p>
+    <p><strong>Sueldo Mensual:</strong> ${{ sobretiempo.sueldo_mensual|floatformat:2 }}</p>
+
+    <h6>Detalles</h6>
+
+    {% if detalles %}
+    <table class="table table-sm">
+        <thead>
+            <tr>
+                <th>Tipo</th>
+                <th>Horas</th>
+                <th>Factor</th>
+                <th>Valor Calculado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for d in detalles %}
+            <tr>
+                <td>{{ d.tipo_sobretiempo.descripcion }}</td>
+                <td>{{ d.numero_horas }}</td>
+                <td>{{ d.tipo_sobretiempo.factor }}</td>
+                <td>${{ d.valor_calculado|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No hay detalles asociados.</p>
+    {% endif %}
+
+</div>
+
+<div class="modal-footer">
+    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+</div>
+
+{% endblock %}
